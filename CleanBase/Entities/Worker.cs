@@ -1,8 +1,7 @@
-﻿namespace CleanBase.Entities
+﻿namespace CleanBase.Entities;
+
+public class Worker : EntityRoot
 {
-    public class Worker : EntityRoot
-    {
-        public required string Name { get; set; }
-        public required string Code { get; set; }
-    }
+    public required string Name { get; set; }
+    public required string Code { get; set; }
 }

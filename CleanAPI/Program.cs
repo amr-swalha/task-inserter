@@ -5,10 +5,10 @@ using CleanBase;
 using CleanBase.CleanAbstractions.CleanOperation;
 using CleanBusiness.Actors;
 using CleanOperation.DataAccess;
+using CleanOperation.Operations;
 using FastEndpoints;
 using FluentValidation;
 using FluentValidation.AspNetCore;
-using LinqToDB;
 using Microsoft.AspNetCore.OData;
 using Microsoft.AspNetCore.OData.Batch;
 using Microsoft.AspNetCore.ResponseCompression;
@@ -134,6 +134,19 @@ public class Program
         //        return actorSystem.ActorOf(props, type.Name);
         //    });
         //}
+
+        var assembly = typeof(ICleanOperation).Assembly;
+        foreach (
+            var operation in assembly
+                .GetExportedTypes()
+                .Where(r => r.Name.EndsWith("Operation") && r.IsClass)
+        )
+        {
+            builder.Services.AddScoped(
+                operation.GetInterface($"I{operation.Name}"),
+                operation
+            );
+        }
 
 
         var app = builder.Build();

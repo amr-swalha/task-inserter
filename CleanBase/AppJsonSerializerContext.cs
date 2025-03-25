@@ -2,13 +2,12 @@
 using CleanBase.Entities;
 using System.Text.Json.Serialization;
 
-namespace CleanBase
+namespace CleanBase;
+
+[JsonSerializable(typeof(Guid))]
+[JsonSerializable(typeof(Worker))]
+[JsonSerializable(typeof(Zone))]
+[JsonSerializable(typeof(WorkerZoneAssignment))]
+public partial class AppJsonSerializerContext : JsonSerializerContext
 {
-    [JsonSerializable(typeof(Guid))]
-    [JsonSerializable(typeof(Worker))]
-    [JsonSerializable(typeof(Zone))]
-    [JsonSerializable(typeof(WorkerZoneAssignment))]
-    public partial class AppJsonSerializerContext : JsonSerializerContext
-    {
-    }
 }
