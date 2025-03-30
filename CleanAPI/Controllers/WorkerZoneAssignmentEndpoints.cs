@@ -1,5 +1,7 @@
 ﻿using System.Collections.Immutable;
 using System.Globalization;
+using System.Text.Json;
+using System.Text.RegularExpressions;
 using CleanBase.CleanAbstractions.CleanOperation;
 using CleanBase.Dtos;
 using CleanBase.Entities;
@@ -37,6 +39,7 @@ namespace CleanAPI.Controllers
                 // determine what's valid and what's not
                 // fail the incorrect early
                 HashSet<string> invalidWorkersIds = new HashSet<string>();
+                HashSet<string> doesNotWorkersIds = new HashSet<string>();
                 invalidWorkersIds = records.Where(y => y.Worker_Code.Length > 10)
                     .Select(y => y.Worker_Code).ToHashSet();
                 HashSet<string> workersIds = new HashSet<string>();
@@ -46,7 +49,13 @@ namespace CleanAPI.Controllers
                     .Set<Worker>().Where(y => workersIds.Contains(y.Code))
                     .Select(y=> new Worker(){ Code = y.Code, Id = y.Id})
                     .ToList();
+                foreach (var worker in workersIds.Where(y => !exists.Select(z => z.Code).Contains(y)))
+                {
+                    doesNotWorkersIds.Add(worker);
+                }
+                workersIds.RemoveWhere(y => invalidWorkersIds.Contains(y));  
                 HashSet<string> invalidZoneIds = new HashSet<string>();
+                HashSet<string> doesnotExitsZoneIds = new HashSet<string>();
                 HashSet<string> zoneIds = new HashSet<string>();
                 invalidZoneIds = records.Where(y => y.Zone_Code.Length > 10)
                     .Select(y  => y.Zone_Code).ToHashSet();
@@ -57,38 +66,66 @@ namespace CleanAPI.Controllers
                     .Set<Zone>().Where(y => zoneIds.Contains(y.Code))
                     .Select(y=> new Zone(){ Code = y.Code, Id = y.Id})
                     .ToList();
-                
+                foreach (var worker in workersIds.Where(y => !zoneExits.Select(z => z.Code).Contains(y)))
+                {
+                    doesnotExitsZoneIds.Add(worker);
+                }
+                zoneIds.RemoveWhere(y => invalidZoneIds.Contains(y));  
                 List<WorkerZoneAssignment> assignments = new List<WorkerZoneAssignment>(records.Count());
                 List<WorkerZoneAssignmentResult> results = new List<WorkerZoneAssignmentResult>(records.Count());
                 foreach (var record in records)
                 {
-                    WorkerValidator validator = new WorkerValidator();
-                    var validationResult = validator.Validate(record);
-                    if (!validationResult.IsValid)
-                        Console.WriteLine($"{record.Worker_Code} - {record.Zone_Code}");
-                    else
+                    WorkerZoneAssignmentResult assignment = new WorkerZoneAssignmentResult();
+                    assignment.data.Add(nameof(record.Worker_Code), record.Worker_Code);
+                    assignment.data.Add(nameof(record.Zone_Code), record.Zone_Code);
+                    assignment.data.Add(nameof(record.Assignment_Date), record.Assignment_Date);
+                    if (!Regex.IsMatch(record.Assignment_Date,"^\\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$"))
                     {
-                        
-                        
-                        var temp = DateTime.Parse(record.Assignment_Date);
-                        _workerZoneAssignmentRepository.GetAppDataContext().Set<Worker>()
-                            .Where(y => y.Code == record.Worker_Code)
-                            .Select(y => "Worker_Code");
-                        _workerZoneAssignmentRepository.GetAppDataContext().Set<Zone>()
-                            .Where(y => y.Code == record.Zone_Code)
-                            .Select(y => "Zone_Code");
+                        assignment.error.Add(nameof(record.Worker_Code),"Date is invalid");
+                    }
+                    if (doesNotWorkersIds.Contains(record.Worker_Code))
+                    {
+                        assignment.error.Add(nameof(record.Worker_Code),"Worker Code does not exist");
+                    }
 
-                        var valid = true;
-                        if (!valid)
+                    if (invalidWorkersIds.Contains(record.Worker_Code))
+                    {
+                        assignment.error.Add(nameof(record.Worker_Code),"Worker Code exceeds 10 characters");
+                    }
+
+                    if (doesnotExitsZoneIds.Contains(record.Zone_Code))
+                    {
+                        assignment.error.Add(nameof(record.Zone_Code),"Zone Code does not exist");
+                    }
+
+                    if (invalidZoneIds.Contains(record.Zone_Code))
+                    {
+                        assignment.error.Add(nameof(record.Zone_Code),"Zone Code exceeds 10 characters");
+                    }
+                    if (!assignment.error.Any())
+                    {
+                        var zoneId = _cache.Get<int>(record.Zone_Code);
+                        var workerId = _cache.Get<int>(record.Worker_Code);
+                        var tempDate  = DateTime.Parse(record.Assignment_Date);
+                        var hasExactAssignment = _workerZoneAssignmentRepository
+                            .GetAppDataContext().Set<WorkerZoneAssignment>()
+                            .Any(y => y.ZoneId  == zoneId && y.WorkerId == workerId
+                            && y.EffectiveDate == tempDate);
+                        if (!hasExactAssignment)
                         {
-                            assignments.Add(new WorkerZoneAssignment()
-                            {
-                                EffectiveDate = temp,
-                                
-                            });
+                            _workerZoneAssignmentRepository
+                                .GetAppDataContext().Set<WorkerZoneAssignment>()
+                                .Add(new WorkerZoneAssignment() { EffectiveDate = tempDate , WorkerId =  workerId ,  ZoneId = zoneId });
+                        }
+                        else
+                        {
+                            assignment.error.Add(nameof(record.Assignment_Date),"Assignment Date already exists");
                         }
                     }
+                    results.Add(assignment);
                 }
+                _workerZoneAssignmentRepository.GetAppDataContext().SaveChanges();
+                await SendAsync(results);
             }
         }
     }

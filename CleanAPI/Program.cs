@@ -24,6 +24,7 @@ using System.IO.Compression;
 using System.Reflection;
 using System.Text;
 using System.Text.Json.Serialization;
+using CleanBase.Entities;
 
 namespace CleanAPI;
 
@@ -90,7 +91,7 @@ public class Program
             y.UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking);
             y.LogTo(Console.WriteLine, LogLevel.Information);
         });
-
+        builder.Services.AddHostedService<InitializeCacheService>();
 
         var defaultBatchHandler = new DefaultODataBatchHandler();
         defaultBatchHandler.MessageQuotas.MaxNestingDepth = 3;
