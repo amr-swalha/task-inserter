@@ -55,7 +55,7 @@ public class Program
 
             jwtOptions.MapInboundClaims = false;
         });
-
+        builder.Services.AddMemoryCache();
         builder.Services.AddOpenApi();
         builder.Services.AddSerilog();
         builder.Services.AddFastEndpoints().AddResponseCaching();
@@ -79,7 +79,6 @@ public class Program
         // Add services to the container.
         builder.Services.AddDbContext<AppDataContext>(y =>
         {
-            
             var dbConnection = builder.Configuration["ConnectionStrings:DefaultConnection"];
             y.UseNpgsql(builder.Configuration["ConnectionStrings:DefaultConnection"],
                 o => o.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery))
@@ -89,6 +88,7 @@ public class Program
             y.EnableSensitiveDataLogging();
             y.ConfigureWarnings(y => y.Ignore(InMemoryEventId.TransactionIgnoredWarning));
             y.UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking);
+            y.LogTo(Console.WriteLine, LogLevel.Information);
         });
 
 

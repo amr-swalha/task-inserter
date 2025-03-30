@@ -2,6 +2,6 @@
 
 public class Zone : EntityRoot
 {
-    public required string Name { get; set; }
-    public required string Code { get; set; }
+    public string Name { get; set; }
+    public string Code { get; set; }
 }
