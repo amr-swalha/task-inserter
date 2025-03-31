@@ -32,6 +32,7 @@ public class AppDataContext : DbContext
         modelBuilder.Entity<WorkerZoneAssignment>().ToTable(nameof(WorkerZoneAssignment).ToSnakeCase());
         modelBuilder.Entity<WorkerZoneAssignment>().HasOne(r => r.Worker);
         modelBuilder.Entity<WorkerZoneAssignment>().HasOne(r => r.Zone);
+        modelBuilder.Entity<WorkerZoneAssignment>().Ignore(r => r.ExtraDetails);
         EntityPropertyMapper(modelBuilder);
     }
     private void EntityPropertyMapper(ModelBuilder modelBuilder)

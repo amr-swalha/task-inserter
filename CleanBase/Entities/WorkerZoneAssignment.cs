@@ -1,4 +1,6 @@
-﻿namespace CleanBase.Entities;
+﻿using CleanBase.Dtos;
+
+namespace CleanBase.Entities;
 
 public class WorkerZoneAssignment : EntityRoot
 {
@@ -7,4 +9,5 @@ public class WorkerZoneAssignment : EntityRoot
     public int ZoneId { get; set; }
     public Zone? Zone { get; set; }
     public DateTime EffectiveDate { get; set; }
+    public WorkerZoneAssignmentFileDto ExtraDetails { get; set; }
 }
