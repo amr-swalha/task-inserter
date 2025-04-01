@@ -33,3 +33,6 @@
 /CleanBaseGenerator/bin/Debug/netstandard2.0
 /CleanBaseGenerator/obj
 /.idea/.idea.CleanArchitecture/.idea
+/TaskInserter.ProjectTests/bin/Debug/net7.0
+/TaskInserter.ProjectTests/obj/Debug/net7.0
+/TaskInserter.ProjectTests/obj
