@@ -26,4 +26,8 @@
     <ProjectReference Include="..\CleanBusiness\CleanBusiness.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Samples\" />
+  </ItemGroup>
+
 </Project>
