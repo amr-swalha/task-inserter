@@ -29,6 +29,7 @@ public class AppDataContext : DbContext
         base.OnModelCreating(modelBuilder);
         modelBuilder.Entity<Worker>().ToTable(nameof(Worker).ToSnakeCase());
         modelBuilder.Entity<Zone>().ToTable(nameof(Zone).ToSnakeCase());
+        modelBuilder.Entity<FileHistory>().ToTable(nameof(FileHistory).ToSnakeCase());
         modelBuilder.Entity<WorkerZoneAssignment>().ToTable(nameof(WorkerZoneAssignment).ToSnakeCase());
         modelBuilder.Entity<WorkerZoneAssignment>().HasOne(r => r.Worker);
         modelBuilder.Entity<WorkerZoneAssignment>().HasOne(r => r.Zone);
